@@ -1,0 +1,204 @@
+---
+title: "Applications of Machine Learning for Personalization of Online Content Using Big Data"
+author: "Valeri Voev"
+output:
+  rmdshower::shower_presentation:
+    self_contained: false
+    katex: true
+    ratio: 16x10
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE, warning = FALSE, message = FALSE)
+library(readr)
+library(dplyr)
+library(kableExtra)
+#library(printr)
+
+read_movielens <- function(fileName, separators) {
+	data <- readLines(con <- file(fileName))
+	close(con)
+	data <- gsub("::", "#", data)
+	read_delim(data, delim = "#", col_names = FALSE)
+}
+```
+
+```{r data_load, include=FALSE, cache=TRUE}
+users <- read_movielens("ml-1m/users.dat") %>% 
+	setNames(c("UserID", "Gender", "Age", "Occupation", "Zip-code")) 
+
+movies <- read_movielens("ml-1m/movies.dat") %>% 
+	setNames(c("MovieID", "Title", "Genres")) 
+
+ratings <- read_movielens("ml-1m/ratings.dat") %>% 
+	setNames(c("UserID", "MovieID", "Rating", "Timestamp")) 
+```
+
+## Applications of Machine Learning for Personalization of Online Content Using Big Data { .white }
+
+<img src="scifi.jpg" class="cover">
+
+<p class="white">
+Valeri Voev <br />
+Lead Data Scientist, LEGO Group
+</p>
+
+
+## What is personalization? 
+
+> the action of designing or producing something to meet someone's individual requirements.
+**Oxford Online Dictionary**
+
+<div class="double">
+<p class="double-flow">
+* Google searches
+* FB feed
+* Netflix recommendations
+</p><p class="double-flow">
+* Spotify recommendations
+* Online shopping
+* Your news website
+</p>
+</div>
+
+
+## How is personalization achieved
+
+
+Online content providers (online shops, social network platforms, streaming services) collect massive amounts of information about their user base - not only demographic and personal information, but also any interaction (click, like, post, etc) users have with the platform. 
+
+We will work with an example for personalized movie recommendations based on the [MovieLens](https://grouplens.org/datasets/movielens/1m/) database.
+
+
+## The aim
+
+We would like to be able to:
+
+* Recommend new movies to existing users
+* Recommend movies to new users as soon as they have rated at least one movie
+
+To this end we will use an approach called **collaborative filtering**
+
+* Collaborative - using preferences of many users
+* Filtering - to predict (filter out) the items that a givem user might like
+
+## Rating table
+
+<table>
+        <tr>
+            <th scope="col"></th>
+            <th style="text-align:center">Item 1</th>
+            <th style="text-align:center">Item 2</th>
+            <th style="text-align:center">Item 3</th>
+            <th style="text-align:center">Item 4</th>
+        </tr>
+        <tr>
+            <th scope="row">User 1</th>
+            <td align = "center">  </td>
+            <td align = "center"> 1 </td>
+            <td align = "center">  </td>
+            <td align = "center"> 5 </td>
+        </tr>
+        <tr>
+            <th scope="row">User 2</th>
+            <td align = "center">  </td>
+            <td align = "center">  </td>
+            <td align = "center"> 3 </td>
+            <td align = "center">  </td>
+        </tr>
+        <tr>
+            <th scope="row">User 3</th>
+            <td align = "center">  </td>
+            <td align = "center"> 4 </td>
+            <td align = "center">  </td>
+            <td align = "center">  </td>
+        </tr>
+        <tr>
+            <th scope="row">User 4</th>
+            <td align = "center"> 3 </td>
+            <td align = "center">  </td>
+            <td align = "center">  </td>
+            <td align = "center">  </td>
+        </tr>
+        <tr>
+            <th scope="row">User 5</th>
+            <td align = "center">  </td>
+            <td align = "center">  </td>
+            <td align = "center"> 2 </td>
+            <td align = "center">  </td>
+        </tr>
+</table>
+... we will try to fill in the gaps
+
+## Problem formulation
+
+We will follow the exposition of "*Large-scale Parallel Collaborative Filtering for the Netflix Prize*" by Zhou et al.
+
+* Denote the rating matrix by \( R \) of dimension \( n_u \times n_i \) where \(n_u\) is the number of users and \(n_i\) is the number of items. 
+* An element \( r_{ij}\) represents the rating that user  \( i \) gave to item  \( j \) -- either a real number or missing.
+
+___
+
+We decompose the matrix \( R \) as 
+
+\[ R_{(n_u \times n_i)} = U_{(n_u \times n_f)} V_{(n_f \times n_i)}, \]
+
+where \( n_f \) is the number of latent factors (features). We will call \( U \) the user matrix and \( V \) - the item matrix.
+
+Denote by \( \mathbf{u}_i \subseteq \mathbb{R}^{n_f} \) the \(i\)-th row of \( U \) and \( \mathbf{v}_j \subseteq \mathbb{R}^{n_f} \) the \(j\)-th column of \( V \).
+
+With \( n_f \) large enough (relative to \( n_u \) and \( n_i \)) we can fit \( R \) perfectly, i.e., \( r_{ij} = <\mathbf{u}_i, \mathbf{v}_j>, \forall i, j \).
+
+___
+
+For very large \( n_u \) and \( n_i \), however, that would not be feasible (nor desirable - we will return to that a bit later), so in practice we minimize a mean-square loss function. For a single rating \(r\) the loss function is defined as
+
+\[\mathcal{L}^2(r, \mathbf{u}, \mathbf{v}) = (r - <\mathbf{u}, \mathbf{v}>)^2\].
+
+## The data
+
+* Users table
+
+```{r}
+users 
+```
+___
+
+* Movies table
+```{r}
+movies
+```
+
+___
+
+* Ratings table
+```{r}
+ratings
+```
+Data sparsity is `r scales::percent(1-nrow(ratings)/(nrow(users)*nrow(movies)))`.
+
+## Top 5 movies
+```{r}
+ratings %>% group_by(MovieID) %>% 
+	summarise(MeanRating = mean(Rating), nRatings = n()) %>%
+	filter(nRatings >= 10) %>% 
+	top_n(5, MeanRating) %>% 
+	arrange(desc(MeanRating)) %>% 
+	inner_join(movies)
+```
+
+## Bottom 5 movies
+```{r}
+ratings %>% group_by(MovieID) %>% 
+	summarise(MeanRating = mean(Rating), nRatings = n()) %>%
+	filter(nRatings >= 10) %>% 
+	top_n(-5, MeanRating) %>% 
+	arrange(MeanRating) %>% 
+	inner_join(movies)
+```
+
+
+## A formula
+
+\[ x_{1,2} = \frac{- b \pm \sqrt{b^2 - 4ac}}{2a} \]

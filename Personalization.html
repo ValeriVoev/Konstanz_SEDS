@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Applications of Machine Learning for Personalization of Online Content Using Big Data</title>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="Personalization_files/shower-ribbon/package/styles/screen-16x10.css">
+  <link rel="stylesheet" href="Personalization_files/rmdshower/style-common.css">
+  <link rel="stylesheet" href="Personalization_files/rmdshower/style-ribbon.css">
+  <link rel="stylesheet" href="Personalization_files/shower-ribbon/style-override.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.js"></script>
+  <script src="Personalization_files/rmdshower/auto-render.min.js" type="text/javascript"></script>
+  
+  
+  
+  
+  
+</head>
+
+<body class="shower list">
+
+  <header class="caption">
+    <h1>Applications of Machine Learning for Personalization of Online Content Using Big Data</h1>
+    <p>Valeri Voev</p>
+  </header>
+
+  
+  
+<section id="applications-of-machine-learning-for-personalization-of-online-content-using-big-data" class="slide level2 white">
+<h2>Applications of Machine Learning for Personalization of Online Content Using Big Data</h2>
+<p><img src="scifi.jpg" class="cover"></p>
+<p class="white">
+Valeri Voev <br /> Lead Data Scientist, LEGO Group
+</p>
+</section>
+<section id="what-is-personalization" class="slide level2">
+<h2>What is personalization?</h2>
+<blockquote>
+<p>the action of designing or producing something to meet someone’s individual requirements. <strong>Oxford Online Dictionary</strong></p>
+</blockquote>
+<div class="double">
+<p class="double-flow">
+<ul>
+<li>Google searches</li>
+<li>FB feed</li>
+<li>Netflix recommendations</li>
+</ul>
+</p>
+<p class="double-flow">
+<ul>
+<li>Spotify recommendations</li>
+<li>Online shopping</li>
+<li>Your news website</li>
+</ul>
+</p>
+</div>
+</section>
+<section id="how-is-personalization-achieved" class="slide level2">
+<h2>How is personalization achieved</h2>
+<p>Online content providers (online shops, social network platforms, streaming services) collect massive amounts of information about their user base - not only demographic and personal information, but also any interaction (click, like, post, etc) users have with the platform.</p>
+<p>We will work with an example for personalized movie recommendations based on the <a href="https://grouplens.org/datasets/movielens/1m/">MovieLens</a> database.</p>
+</section>
+<section id="the-aim" class="slide level2">
+<h2>The aim</h2>
+<p>We would like to be able to:</p>
+<ul>
+<li>Recommend new movies to existing users</li>
+<li>Recommend movies to new users as soon as they have rated at least one movie</li>
+</ul>
+<p>To this end we will use an approach called <strong>collaborative filtering</strong></p>
+<ul>
+<li>Collaborative - using preferences of many users</li>
+<li>Filtering - to predict (filter out) the items that a givem user might like</li>
+</ul>
+</section>
+<section id="rating-table" class="slide level2">
+<h2>Rating table</h2>
+<table>
+<tr>
+<th scope="col">
+</th>
+<th style="text-align:center">
+Item 1
+</th>
+<th style="text-align:center">
+Item 2
+</th>
+<th style="text-align:center">
+Item 3
+</th>
+<th style="text-align:center">
+Item 4
+</th>
+</tr>
+<tr>
+<th scope="row">
+User 1
+</th>
+<td align="center">
+</td>
+<td align="center">
+1
+</td>
+<td align="center">
+</td>
+<td align="center">
+5
+</td>
+</tr>
+<tr>
+<th scope="row">
+User 2
+</th>
+<td align="center">
+</td>
+<td align="center">
+</td>
+<td align="center">
+3
+</td>
+<td align="center">
+</td>
+</tr>
+<tr>
+<th scope="row">
+User 3
+</th>
+<td align="center">
+</td>
+<td align="center">
+4
+</td>
+<td align="center">
+</td>
+<td align="center">
+</td>
+</tr>
+<tr>
+<th scope="row">
+User 4
+</th>
+<td align="center">
+3
+</td>
+<td align="center">
+</td>
+<td align="center">
+</td>
+<td align="center">
+</td>
+</tr>
+<tr>
+<th scope="row">
+User 5
+</th>
+<td align="center">
+</td>
+<td align="center">
+</td>
+<td align="center">
+2
+</td>
+<td align="center">
+</td>
+</tr>
+</table>
+<p>… we will try to fill in the gaps</p>
+</section>
+<section id="problem-formulation" class="slide level2">
+<h2>Problem formulation</h2>
+<p>We will follow the exposition of “<em>Large-scale Parallel Collaborative Filtering for the Netflix Prize</em>” by Zhou et al.</p>
+<ul>
+<li>Denote the rating matrix by <span class="math inline">\(R\)</span> of dimension <span class="math inline">\(n_u \times n_i\)</span> where <span class="math inline">\(n_u\)</span> is the number of users and <span class="math inline">\(n_i\)</span> is the number of items.</li>
+<li>An element <span class="math inline">\(r_{ij}\)</span> represents the rating that user <span class="math inline">\(i\)</span> gave to item <span class="math inline">\(j\)</span> – either a real number or missing.</li>
+</ul>
+</section>
+<section class="slide level2">
+
+<p>We decompose the matrix <span class="math inline">\(R\)</span> as</p>
+<p><span class="math display">\[ R_{(n_u \times n_i)} = U_{(n_u \times n_f)} V_{(n_f \times n_i)}, \]</span></p>
+<p>where <span class="math inline">\(n_f\)</span> is the number of latent factors (features). We will call <span class="math inline">\(U\)</span> the user matrix and <span class="math inline">\(V\)</span> - the item matrix.</p>
+<p>Denote by <span class="math inline">\(\mathbf{u}_i \subseteq \mathbb{R}^{n_f}\)</span> the <span class="math inline">\(i\)</span>-th row of <span class="math inline">\(U\)</span> and <span class="math inline">\(\mathbf{v}_j \subseteq \mathbb{R}^{n_f}\)</span> the <span class="math inline">\(j\)</span>-th column of <span class="math inline">\(V\)</span>.</p>
+<p>With <span class="math inline">\(n_f\)</span> large enough (relative to <span class="math inline">\(n_u\)</span> and <span class="math inline">\(n_i\)</span>) we can fit <span class="math inline">\(R\)</span> perfectly, i.e., <span class="math inline">\(r_{ij} = &lt;\mathbf{u}_i, \mathbf{v}_j&gt;, \forall i, j\)</span>.</p>
+</section>
+<section class="slide level2">
+
+<p>For very large <span class="math inline">\(n_u\)</span> and <span class="math inline">\(n_i\)</span>, however, that would not be feasible (nor desirable - we will return to that a bit later), so in practice we minimize a mean-square loss function. For a single rating <span class="math inline">\(r\)</span> the loss function is defined as</p>
+<p><span class="math display">\[\mathcal{L}^2(r, \mathbf{u}, \mathbf{v}) = (r - &lt;\mathbf{u}, \mathbf{v}&gt;)^2\]</span>.</p>
+</section>
+<section id="the-data" class="slide level2">
+<h2>The data</h2>
+<ul>
+<li>Users table</li>
+</ul>
+<pre><code>## # A tibble: 6,040 x 5
+##    UserID Gender   Age Occupation `Zip-code`
+##     &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;     
+##  1      1 F          1         10 48067     
+##  2      2 M         56         16 70072     
+##  3      3 M         25         15 55117     
+##  4      4 M         45          7 02460     
+##  5      5 M         25         20 55455     
+##  6      6 F         50          9 55117     
+##  7      7 M         35          1 06810     
+##  8      8 M         25         12 11413     
+##  9      9 M         25         17 61614     
+## 10     10 F         35          1 95370     
+## # … with 6,030 more rows</code></pre>
+</section>
+<section class="slide level2">
+
+<ul>
+<li>Movies table</li>
+</ul>
+<pre><code>## # A tibble: 3,883 x 3
+##    MovieID Title                              Genres                      
+##      &lt;dbl&gt; &lt;chr&gt;                              &lt;chr&gt;                       
+##  1       1 Toy Story (1995)                   Animation|Children&#39;s|Comedy 
+##  2       2 Jumanji (1995)                     Adventure|Children&#39;s|Fantasy
+##  3       3 Grumpier Old Men (1995)            Comedy|Romance              
+##  4       4 Waiting to Exhale (1995)           Comedy|Drama                
+##  5       5 Father of the Bride Part II (1995) Comedy                      
+##  6       6 Heat (1995)                        Action|Crime|Thriller       
+##  7       7 Sabrina (1995)                     Comedy|Romance              
+##  8       8 Tom and Huck (1995)                Adventure|Children&#39;s        
+##  9       9 Sudden Death (1995)                Action                      
+## 10      10 GoldenEye (1995)                   Action|Adventure|Thriller   
+## # … with 3,873 more rows</code></pre>
+</section>
+<section class="slide level2">
+
+<ul>
+<li>Ratings table</li>
+</ul>
+<pre><code>## # A tibble: 1,000,209 x 4
+##    UserID MovieID Rating Timestamp
+##     &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;
+##  1      1    1193      5 978300760
+##  2      1     661      3 978302109
+##  3      1     914      3 978301968
+##  4      1    3408      4 978300275
+##  5      1    2355      5 978824291
+##  6      1    1197      3 978302268
+##  7      1    1287      5 978302039
+##  8      1    2804      5 978300719
+##  9      1     594      4 978302268
+## 10      1     919      4 978301368
+## # … with 1,000,199 more rows</code></pre>
+<p>Data sparsity is 95.7%.</p>
+</section>
+<section id="top-5-movies" class="slide level2">
+<h2>Top 5 movies</h2>
+<pre><code>## # A tibble: 5 x 5
+##   MovieID MeanRating nRatings Title                               Genres        
+##     &lt;dbl&gt;      &lt;dbl&gt;    &lt;int&gt; &lt;chr&gt;                               &lt;chr&gt;         
+## 1    2905       4.61       69 Sanjuro (1962)                      Action|Advent…
+## 2    2019       4.56      628 Seven Samurai (The Magnificent Sev… Action|Drama  
+## 3     318       4.55     2227 Shawshank Redemption, The (1994)    Drama         
+## 4     858       4.52     2223 Godfather, The (1972)               Action|Crime|…
+## 5     745       4.52      657 Close Shave, A (1995)               Animation|Com…</code></pre>
+</section>
+<section id="bottom-5-movies" class="slide level2">
+<h2>Bottom 5 movies</h2>
+<pre><code>## # A tibble: 5 x 5
+##   MovieID MeanRating nRatings Title                          Genres             
+##     &lt;dbl&gt;      &lt;dbl&gt;    &lt;int&gt; &lt;chr&gt;                          &lt;chr&gt;              
+## 1    3574       1.06       17 Carnosaur 3: Primal Species (… Horror|Sci-Fi      
+## 2    1495       1.32       44 Turbo: A Power Rangers Movie … Action|Adventure|C…
+## 3    1739       1.36       47 3 Ninjas: High Noon On Mega M… Action|Children&#39;s  
+## 4    1323       1.37       43 Amityville 3-D (1983)          Horror             
+## 5    3573       1.46       26 Carnosaur 2 (1995)             Horror|Sci-Fi</code></pre>
+</section>
+<section id="a-formula" class="slide level2">
+<h2>A formula</h2>
+<p><span class="math display">\[ x_{1,2} = \frac{- b \pm \sqrt{b^2 - 4ac}}{2a} \]</span></p>
+</section>
+
+  <!--
+  To hide progress bar from entire presentation
+  just remove “progress” element.
+  -->
+  <!-- <div class="progress"></div> -->
+  <script src="Personalization_files/rmdshower/node_modules/shower/node_modules/shower-core/shower.min.js"></script>
+  <!-- Copyright © 2015 Yours Truly, Famous Inc. -->
+  <!-- Photos by John Carey, fiftyfootshadows.net -->
+
+    <script>renderMathInElement(document.body);</script>
+  
+  
+</body>
+</html>

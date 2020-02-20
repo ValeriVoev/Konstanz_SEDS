@@ -1,0 +1,380 @@
+\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[ignorenonframetext,]{beamer}
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% Prevent slide breaks in the middle of a paragraph:
+\widowpenalties 1 10000
+\raggedbottom
+\setbeamertemplate{part page}{
+\centering
+\begin{beamercolorbox}[sep=16pt,center]{part title}
+  \usebeamerfont{part title}\insertpart\par
+\end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+\centering
+\begin{beamercolorbox}[sep=12pt,center]{part title}
+  \usebeamerfont{section title}\insertsection\par
+\end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+\centering
+\begin{beamercolorbox}[sep=8pt,center]{part title}
+  \usebeamerfont{subsection title}\insertsubsection\par
+\end{beamercolorbox}
+}
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provides euro and other symbols
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\usepackage{hyperref}
+\hypersetup{
+            pdftitle={Applications of Machine Learning for Personalization of Online Content Using Big Data},
+            pdfauthor={Valeri Voev},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\newif\ifbibliography
+\usepackage{longtable,booktabs}
+\usepackage{caption}
+% These lines are needed to make table captions work with longtable:
+\makeatletter
+\def\fnum@table{\tablename~\thetable}
+\makeatother
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+
+% set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+
+\title{Applications of Machine Learning for Personalization of Online Content
+Using Big Data}
+\author{Valeri Voev}
+\date{}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Applications of Machine Learning for Personalization of
+Online Content Using Big Data}
+\protect\hypertarget{applications-of-machine-learning-for-personalization-of-online-content-using-big-data}{}
+
+Valeri Voev Lead Data Scientist, LEGO Group
+
+\end{frame}
+
+\begin{frame}{What is personalization?}
+\protect\hypertarget{what-is-personalization}{}
+
+\begin{quote}
+the action of designing or producing something to meet someone's
+individual requirements. \textbf{Oxford Online Dictionary}
+\end{quote}
+
+\begin{itemize}
+\tightlist
+\item
+  Google searches
+\item
+  FB feed
+\item
+  Netflix recommendations
+\end{itemize}
+
+\begin{itemize}
+\tightlist
+\item
+  Spotify recommendations
+\item
+  Online shopping
+\item
+  Your news website
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{How is personalization achieved}
+\protect\hypertarget{how-is-personalization-achieved}{}
+
+Online content providers (online shops, social network platforms,
+streaming services) collect massive amounts of information about their
+user base - not only demographic and personal information, but also any
+interaction (click, like, post, etc) users have with the platform.
+
+We will work with an example for personalized movie recommendations
+based on the
+\href{https://grouplens.org/datasets/movielens/1m/}{MovieLens} database.
+
+\end{frame}
+
+\begin{frame}[fragile]{The data}
+\protect\hypertarget{the-data}{}
+
+\begin{itemize}
+\tightlist
+\item
+  Users table
+\end{itemize}
+
+\begin{verbatim}
+## # A tibble: 6,040 x 5
+##    UserID Gender   Age Occupation `Zip-code`
+##     <dbl> <chr>  <dbl>      <dbl> <chr>     
+##  1      1 F          1         10 48067     
+##  2      2 M         56         16 70072     
+##  3      3 M         25         15 55117     
+##  4      4 M         45          7 02460     
+##  5      5 M         25         20 55455     
+##  6      6 F         50          9 55117     
+##  7      7 M         35          1 06810     
+##  8      8 M         25         12 11413     
+##  9      9 M         25         17 61614     
+## 10     10 F         35          1 95370     
+## # ... with 6,030 more rows
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+\begin{itemize}
+\tightlist
+\item
+  Movies table
+\end{itemize}
+
+\begin{verbatim}
+## # A tibble: 3,883 x 3
+##    MovieID Title                              Genres                      
+##      <dbl> <chr>                              <chr>                       
+##  1       1 Toy Story (1995)                   Animation|Children's|Comedy 
+##  2       2 Jumanji (1995)                     Adventure|Children's|Fantasy
+##  3       3 Grumpier Old Men (1995)            Comedy|Romance              
+##  4       4 Waiting to Exhale (1995)           Comedy|Drama                
+##  5       5 Father of the Bride Part II (1995) Comedy                      
+##  6       6 Heat (1995)                        Action|Crime|Thriller       
+##  7       7 Sabrina (1995)                     Comedy|Romance              
+##  8       8 Tom and Huck (1995)                Adventure|Children's        
+##  9       9 Sudden Death (1995)                Action                      
+## 10      10 GoldenEye (1995)                   Action|Adventure|Thriller   
+## # ... with 3,873 more rows
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+\begin{itemize}
+\tightlist
+\item
+  Ratings table
+\end{itemize}
+
+\begin{verbatim}
+## # A tibble: 1,000,209 x 4
+##    UserID MovieID Rating Timestamp
+##     <dbl>   <dbl>  <dbl>     <dbl>
+##  1      1    1193      5 978300760
+##  2      1     661      3 978302109
+##  3      1     914      3 978301968
+##  4      1    3408      4 978300275
+##  5      1    2355      5 978824291
+##  6      1    1197      3 978302268
+##  7      1    1287      5 978302039
+##  8      1    2804      5 978300719
+##  9      1     594      4 978302268
+## 10      1     919      4 978301368
+## # ... with 1,000,199 more rows
+\end{verbatim}
+
+Data sparsity is 95.7\%.
+
+\end{frame}
+
+\begin{frame}[fragile]{Top 5 movies}
+\protect\hypertarget{top-5-movies}{}
+
+\begin{verbatim}
+## # A tibble: 5 x 5
+##   MovieID MeanRating nRatings Title                               Genres        
+##     <dbl>      <dbl>    <int> <chr>                               <chr>         
+## 1    2905       4.61       69 Sanjuro (1962)                      Action|Advent~
+## 2    2019       4.56      628 Seven Samurai (The Magnificent Sev~ Action|Drama  
+## 3     318       4.55     2227 Shawshank Redemption, The (1994)    Drama         
+## 4     858       4.52     2223 Godfather, The (1972)               Action|Crime|~
+## 5     745       4.52      657 Close Shave, A (1995)               Animation|Com~
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{Bottom 5 movies}
+\protect\hypertarget{bottom-5-movies}{}
+
+\begin{verbatim}
+## # A tibble: 5 x 5
+##   MovieID MeanRating nRatings Title                          Genres             
+##     <dbl>      <dbl>    <int> <chr>                          <chr>              
+## 1    3574       1.06       17 Carnosaur 3: Primal Species (~ Horror|Sci-Fi      
+## 2    1495       1.32       44 Turbo: A Power Rangers Movie ~ Action|Adventure|C~
+## 3    1739       1.36       47 3 Ninjas: High Noon On Mega M~ Action|Children's  
+## 4    1323       1.37       43 Amityville 3-D (1983)          Horror             
+## 5    3573       1.46       26 Carnosaur 2 (1995)             Horror|Sci-Fi
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{The aim}
+\protect\hypertarget{the-aim}{}
+
+We would like to be able to:
+
+\begin{itemize}
+\tightlist
+\item
+  Recommend new movies to existing users
+\item
+  Recommend movies to new users as soon as they have rated at least one
+  movie
+\end{itemize}
+
+To this end we will use an approach called \textbf{collaborative
+filtering}
+
+\begin{itemize}
+\tightlist
+\item
+  Collaborative - using preferences of many users
+\item
+  Filtering - to predict (filter out) the items that a givem user might
+  like
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{A matrix}
+\protect\hypertarget{a-matrix}{}
+
+\begin{longtable}[]{@{}lcccc@{}}
+\toprule
+& item 1 & item 2 & item 3 & item 4\tabularnewline
+\midrule
+\endhead
+user 1 & & 1 & &\tabularnewline
+user 2 & & & 3 &\tabularnewline
+user 3 & & & &\tabularnewline
+user 4 & & 4 & &\tabularnewline
+user 5 & 3 & & &\tabularnewline
+\bottomrule
+\end{longtable}
+
+\[ x_{1,2} = \frac{- b \pm \sqrt{b^2 - 4ac}}{2a} \]
+
+\end{frame}
+
+\begin{frame}{test}
+\protect\hypertarget{test}{}
+
+\begin{longtable}[]{@{}lcr@{}}
+\toprule
+Tables & Are & Cool\tabularnewline
+\midrule
+\endhead
+col 3 is & right-aligned & \$1600\tabularnewline
+col 2 is & centered & \$12\tabularnewline
+zebra stripes & are neat & \$1\tabularnewline
+\bottomrule
+\end{longtable}
+
+\end{frame}
+
+\begin{frame}{html}
+\protect\hypertarget{html}{}
+
+Company
+
+Contact
+
+Country
+
+Alfreds Futterkiste
+
+Maria Anders
+
+Germany
+
+Centro comercial Moctezuma
+
+Francisco Chang
+
+Mexico
+
+Ernst Handel
+
+Roland Mendel
+
+Austria
+
+Island Trading
+
+Helen Bennett
+
+UK
+
+Laughing Bacchus Winecellars
+
+Yoshi Tannamuri
+
+Canada
+
+Magazzini Alimentari Riuniti
+
+Giovanni Rovelli
+
+Italy
+
+\end{frame}
+
+\end{document}
