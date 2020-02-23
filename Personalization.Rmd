@@ -152,9 +152,36 @@ With \( n_f \) large enough (relative to \( n_u \) and \( n_i \)) we can fit \( 
 
 ___
 
-For very large \( n_u \) and \( n_i \), however, that would not be feasible (nor desirable - we will return to that a bit later), so in practice we minimize a mean-square loss function. For a single rating \(r\) the loss function is defined as
+For very large \( n_u \) and \( n_i \), however, that would not be feasible (nor desirable - we will return to that a bit later), so in practice we choose a "small" \( n_f \). For a single rating \(r\) the loss function is defined as
 
-\[\mathcal{L}^2(r, \mathbf{u}, \mathbf{v}) = (r - <\mathbf{u}, \mathbf{v}>)^2\].
+\[\mathcal{l}^2(r, \mathbf{u}, \mathbf{v}) = (r - <\mathbf{u}, \mathbf{v}>)^2\]
+The sample loss is then defined as
+
+\[\mathcal{L}(R, U, V) = \frac{1}{n}\sum_{(i,j)\in I}\mathcal{l}^2(r_{ij}, \mathbf{u}_i, \mathbf{v}_j)\]
+where \(I\) is the set of the known ratings and \(n = \vert I\vert\).
+
+___
+
+The user and item matrix are then estimated by minimizing the empirical loss function:
+
+\[(\hat{U}, \hat{V}) = {\begin{matrix}\\ {\normalsize \text{argmin}} \\ ^{\normalsize (U,V)}\end{matrix}} \;  \mathcal{L}(R, U, V) \]
+
+<!-- \[(\hat{U}, \hat{V}) = \text{arg} \min_{(U,V)}  \mathcal{L}(R, U, V) \] -->
+
+In total there are \(n_f (n_u + n_i) \) parameters but given the sparsity of \(R\) we have much fewer than \(n_un_i\) data points, so choosing a large \(n_f\) will very likely lead to overfitting.
+
+___
+
+To avoid overfitting we will use (weighted) **L2-regularization** and minimize the following loss function
+
+\[ \mathcal{L}^{reg}_{\lambda}(R, U, V) = \mathcal{L}(R, U, V) +  \lambda \left(\sum_{i}n_{u_i}\vert\vert\mathbf{u}_i \vert\vert^2  + \sum_{j}n_{v_j}\vert\vert\mathbf{v}_j \vert\vert^2\right) \] 
+where \(n_{u_i}\) is the number of items that user \(i\) has rated and \(n_{v_j}\) is the number of users that have rated item \(j\).
+
+___
+
+The main contribution of Zhou et al. is the **alternating** least squares (ALS) approach which alternates between updates of the \(U\) and \(V\) matrices (keeping \(V\) and \(U\) fixed, correspondingly). They also show how the problem can be parallelized (showing a Matlab implementation) which allows solving problems of huge dimensions (the Netflix dataset has over 100 million ratings by more than 480,000 users of close to 18,000 movies).
+
+Since then, the ALS method has been implemented in Spark, which is what we will use.
 
 ## The data
 

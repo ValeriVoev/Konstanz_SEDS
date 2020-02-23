@@ -186,8 +186,26 @@ User 5
 </section>
 <section class="slide level2">
 
-<p>For very large <span class="math inline">\(n_u\)</span> and <span class="math inline">\(n_i\)</span>, however, that would not be feasible (nor desirable - we will return to that a bit later), so in practice we minimize a mean-square loss function. For a single rating <span class="math inline">\(r\)</span> the loss function is defined as</p>
-<p><span class="math display">\[\mathcal{L}^2(r, \mathbf{u}, \mathbf{v}) = (r - &lt;\mathbf{u}, \mathbf{v}&gt;)^2\]</span>.</p>
+<p>For very large <span class="math inline">\(n_u\)</span> and <span class="math inline">\(n_i\)</span>, however, that would not be feasible (nor desirable - we will return to that a bit later), so in practice we choose a “small” <span class="math inline">\(n_f\)</span>. For a single rating <span class="math inline">\(r\)</span> the loss function is defined as</p>
+<p><span class="math display">\[\mathcal{l}^2(r, \mathbf{u}, \mathbf{v}) = (r - &lt;\mathbf{u}, \mathbf{v}&gt;)^2\]</span> The sample loss is then defined as</p>
+<p><span class="math display">\[\mathcal{L}(R, U, V) = \frac{1}{n}\sum_{(i,j)\in I}\mathcal{l}^2(r_{ij}, \mathbf{u}_i, \mathbf{v}_j)\]</span> where <span class="math inline">\(I\)</span> is the set of the known ratings and <span class="math inline">\(n = \vert I\vert\)</span>.</p>
+</section>
+<section class="slide level2">
+
+<p>The user and item matrix are then estimated by minimizing the empirical loss function:</p>
+<p><span class="math display">\[(\hat{U}, \hat{V}) = {\begin{matrix}\\ {\normalsize \text{argmin}} \\ ^{\normalsize (U,V)}\end{matrix}} \;  \mathcal{L}(R, U, V) \]</span></p>
+<!-- \[(\hat{U}, \hat{V}) = \text{arg} \min_{(U,V)}  \mathcal{L}(R, U, V) \] -->
+<p>In total there are <span class="math inline">\(n_f (n_u + n_i)\)</span> parameters but given the sparsity of <span class="math inline">\(R\)</span> we have much fewer than <span class="math inline">\(n_un_i\)</span> data points, so choosing a large <span class="math inline">\(n_f\)</span> will very likely lead to overfitting.</p>
+</section>
+<section class="slide level2">
+
+<p>To avoid overfitting we will use (weighted) <strong>L2-regularization</strong> and minimize the following loss function</p>
+<p><span class="math display">\[ \mathcal{L}^{reg}_{\lambda}(R, U, V) = \mathcal{L}(R, U, V) +  \lambda \left(\sum_{i}n_{u_i}\vert\vert\mathbf{u}_i \vert\vert^2  + \sum_{j}n_{v_j}\vert\vert\mathbf{v}_j \vert\vert^2\right) \]</span> where <span class="math inline">\(n_{u_i}\)</span> is the number of items that user <span class="math inline">\(i\)</span> has rated and <span class="math inline">\(n_{v_j}\)</span> is the number of users that have rated item <span class="math inline">\(j\)</span>.</p>
+</section>
+<section class="slide level2">
+
+<p>The main contribution of Zhou et al. is the <strong>alternating</strong> least squares (ALS) approach which alternates between updates of the <span class="math inline">\(U\)</span> and <span class="math inline">\(V\)</span> matrices (keeping <span class="math inline">\(V\)</span> and <span class="math inline">\(U\)</span> fixed, correspondingly). They also show how the problem can be parallelized (showing a Matlab implementation) which allows solving problems of huge dimensions (the Netflix dataset has over 100 million ratings by more than 480,000 users of close to 18,000 movies).</p>
+<p>Since then, the ALS method has been implemented in Spark, which is what we will use.</p>
 </section>
 <section id="the-data" class="slide level2">
 <h2>The data</h2>
