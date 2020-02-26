@@ -72,12 +72,12 @@ Valeri Voev <br /> Lead Data Scientist, LEGO Group
 <p>To this end we will use an approach called <strong>collaborative filtering</strong></p>
 <ul>
 <li>Collaborative - using preferences of many users</li>
-<li>Filtering - to predict (filter out) the items that a givem user might like</li>
+<li>Filtering - to predict (filter out) the items that a given user might like</li>
 </ul>
 </section>
 <section id="rating-table" class="slide level2">
 <h2>Rating table</h2>
-<table>
+<table class = "striped">
 <tr>
 <th scope="col">
 </th>
@@ -204,8 +204,28 @@ User 5
 </section>
 <section class="slide level2">
 
-<p>The main contribution of Zhou et al. is the <strong>alternating</strong> least squares (ALS) approach which alternates between updates of the <span class="math inline">\(U\)</span> and <span class="math inline">\(V\)</span> matrices (keeping <span class="math inline">\(V\)</span> and <span class="math inline">\(U\)</span> fixed, correspondingly). They also show how the problem can be parallelized (showing a Matlab implementation) which allows solving problems of huge dimensions (the Netflix dataset has over 100 million ratings by more than 480,000 users of close to 18,000 movies).</p>
+<p>The main contribution of Zhou et al. is the <strong>alternating</strong> least squares (ALS) approach which alternates between updates of the <span class="math inline">\(U\)</span> and <span class="math inline">\(V\)</span> matrices (keeping <span class="math inline">\(V\)</span> and <span class="math inline">\(U\)</span> fixed, correspondingly). They also show how the problem can be parallelized (Matlab implementation) which allows solving problems of huge dimensions (the Netflix dataset has over 100 million ratings by more than 480,000 users of close to 18,000 movies). The authors estimate a model with <span class="math inline">\(n_f = 100\)</span> which has a staggering <span class="math inline">\(n_f \times (n_u + n_i) \approx 50.000.000\)</span> paramaters!</p>
 <p>Since then, the ALS method has been implemented in Spark, which is what we will use.</p>
+</section>
+<section id="spark" class="slide level2">
+<h2>Spark</h2>
+<p><img src="https://spark.apache.org/images/spark-logo-trademark.png" class="cover" style = "opacity:0.5;"></p>
+<ul>
+<li>Apache Spark™ is a unified analytics engine for large-scale data processing</li>
+<li>Has an interface for R - <code>sparklyr</code> and Python - <code>pyspark</code></li>
+<li>The MLlib machine learning library has many algorithms fo
+<ul>
+<li>Classification</li>
+<li>Regression</li>
+<li>Association rules</li>
+<li>Decision trees</li>
+<li>Clustering, etc</li>
+</ul></li>
+</ul>
+</section>
+<section id="movie-recommender---mickey-mouse-example" class="slide level2">
+<h2>Movie recommender - Mickey Mouse example</h2>
+<p>We will use the rating matrix defined above to go through a simple example in order to understand how the ALS method works in practice, how to fit the model, generate recommendations, examine the most important hyperparameters, etc.</p>
 </section>
 <section id="the-data" class="slide level2">
 <h2>The data</h2>
@@ -289,10 +309,6 @@ User 5
 ## 3    1739       1.36       47 3 Ninjas: High Noon On Mega M… Action|Children&#39;s  
 ## 4    1323       1.37       43 Amityville 3-D (1983)          Horror             
 ## 5    3573       1.46       26 Carnosaur 2 (1995)             Horror|Sci-Fi</code></pre>
-</section>
-<section id="a-formula" class="slide level2">
-<h2>A formula</h2>
-<p><span class="math display">\[ x_{1,2} = \frac{- b \pm \sqrt{b^2 - 4ac}}{2a} \]</span></p>
 </section>
 
   <!--

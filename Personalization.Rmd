@@ -81,11 +81,11 @@ We would like to be able to:
 To this end we will use an approach called **collaborative filtering**
 
 * Collaborative - using preferences of many users
-* Filtering - to predict (filter out) the items that a givem user might like
+* Filtering - to predict (filter out) the items that a given user might like
 
 ## Rating table
 
-<table>
+<table class = "striped">
         <tr>
             <th scope="col"></th>
             <th style="text-align:center">Item 1</th>
@@ -179,9 +179,27 @@ where \(n_{u_i}\) is the number of items that user \(i\) has rated and \(n_{v_j}
 
 ___
 
-The main contribution of Zhou et al. is the **alternating** least squares (ALS) approach which alternates between updates of the \(U\) and \(V\) matrices (keeping \(V\) and \(U\) fixed, correspondingly). They also show how the problem can be parallelized (showing a Matlab implementation) which allows solving problems of huge dimensions (the Netflix dataset has over 100 million ratings by more than 480,000 users of close to 18,000 movies).
+The main contribution of Zhou et al. is the **alternating** least squares (ALS) approach which alternates between updates of the \(U\) and \(V\) matrices (keeping \(V\) and \(U\) fixed, correspondingly). They also show how the problem can be parallelized (Matlab implementation) which allows solving problems of huge dimensions (the Netflix dataset has over 100 million ratings by more than 480,000 users of close to 18,000 movies). The authors estimate a model with \(n_f = 100\) which has a staggering \(n_f \times (n_u + n_i) \approx 50.000.000\) paramaters! 
 
 Since then, the ALS method has been implemented in Spark, which is what we will use.
+
+## Spark
+
+<img src="https://spark.apache.org/images/spark-logo-trademark.png" class="cover" style = "opacity:0.5;">
+
+* Apache Spark™ is a unified analytics engine for large-scale data processing
+* Has an interface for R - `sparklyr` and Python - `pyspark`
+* The MLlib machine learning library has many algorithms fo
+	* Classification
+	* Regression
+	* Association rules
+	* Decision trees
+	* Clustering, etc
+
+## Movie recommender - Mickey Mouse example
+
+We will use the rating matrix defined above to go through a simple example in order to understand how the ALS method works in practice, how to fit the model, generate recommendations, examine the most important hyperparameters, etc.
+
 
 ## The data
 
@@ -225,7 +243,3 @@ ratings %>% group_by(MovieID) %>%
 	inner_join(movies)
 ```
 
-
-## A formula
-
-\[ x_{1,2} = \frac{- b \pm \sqrt{b^2 - 4ac}}{2a} \]
